@@ -1,67 +1,46 @@
-%macro concat 1-*
-    %1: 
+section .text
+global _start
+
+%macro pushn 1-*
+    ; Сохраняем регистры на стек
+    pusha                 ; Сохраняем все регистры общего назначения
+    %rep %0
+        push %1         ; Пушим каждый из аргументов (регистры)
         %rotate 1
-        %rep %0-2
-            db %1, ", "
-            %rotate 1
-        %endrep
-        db %1, 0
-    %2_end:
+    %endrep
+%endmacro
+
+%macro popn 1-*
+    ; Восстанавливаем регистры из стека
+    %rep %0
+        pop %1          ; Попим каждый из аргументов (регистры)
+        %rotate 1
+    %endrep
+    popa                  ; Восстанавливаем все регистры общего назначения
 %endmacro
 
 section .data
+    message db 'Hello, World!', 0
 
-concat string, "hello", "another", "world"
-
-section .text
-
-%define NULL_SYM  0x0
-
-; System calls
-%define SYS_WRITE 1
-%define SYS_EXIT  60
-
-; File descriptors
-%define STDOUT    1
-
-global _start
 _start:
-   mov rdi, string
-   call print_string
-   xor rdi, rdi
-   call exit
+    ; Пример использования макроса pushn для сохранения регистров
+    pushn rax, rbx, rcx  ; Сохраняем rax, rbx и rcx в стек
 
+    ; Временно изменяем значения регистров
+    mov rax, 10
+    mov rbx, 20
+    mov rcx, 30
 
-;; Принимает код возврата и завершает текущий процесс
-exit:
-  mov rax, SYS_EXIT
-  syscall
+    ; Используем потестировать значения регистров
+    ; Делаем что-то полезное с измененными регистрами
+    ; Например, складываем их
+    add rax, rbx       ; rax = 10 + 20 = 30
+    add rax, rcx       ; rax = 30 + 30 = 60
 
-;; Принимает указатель на нуль-терминированную строку, возвращает её длину
-string_length:
-  xor rax, rax  ; Clear the length counter
+    ; Теперь восстановим предыдущие значения регистров
+    popn rax, rbx, rcx  ; Восстанавливаем rax, rbx и rcx из стека
 
-  .counter:
-    ; Checking the current byte is 0
-    cmp byte [rdi + rax], NULL_SYM
-    je .return
-
-    inc rax     ; Go to next byte
-    jmp .counter
-  .return:
-    ret
-
-;; Принимает указатель на нуль-терминированную строку, выводит её в stdout
-print_string:
-  push rdi      ; Save rdi
-  call string_length
-  pop rdi       ; Restore rdi
-
-  mov rdx, rax  ; rdx <- string length
-  mov rsi, rdi  ; rsi <- string start address
-
-  mov rax, SYS_WRITE
-  mov rdi, STDOUT
-  syscall
-
-  ret
+    ; Завершаем программу
+    mov rax, 60        ; системный вызов для выхода
+    xor rdi, rdi       ; код возврата 0
+    syscall
