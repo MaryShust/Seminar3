@@ -5,7 +5,7 @@ LD=ld
 %.o: %.asm
 	$(ASM) $(ASMFLAGS) -o $@ $<
 
-app: lib.o main.o
+program: lib.o main.o
 	$(LD) -o $@ $< main.o
 
 .PHONY: clean
