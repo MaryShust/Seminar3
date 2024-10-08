@@ -1,72 +1,44 @@
+section .data
+    ; Объявляем строки для использования
+    msg1 db "Hello, world!", 0
+    msg2 db "Hello from the assembly!", 0
+
 section .text
 global _start
 
+; Определяем макрос для сохранения регистров на стек
 %macro pushn 1-*
-    ; Сохраняем регистры на стек
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    push rsi
-    push rdi
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
-
     %rep %0
-        push %1         ; Пушим каждый из аргументов (регистры)
+        push %1
         %rotate 1
     %endrep
 %endmacro
 
+; Определяем макрос для восстановления регистров с стека
 %macro popn 1-*
     %rep %0
-        pop %1          ; Попим каждый из аргументов (регистры)
+        pop %1
         %rotate 1
     %endrep
-
-    ; Восстанавливаем все регистры общего назначения
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rdi
-    pop rsi
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
 %endmacro
 
-section .data
-    message db 'Hello, World!', 0
-
 _start:
-    ; Пример использования макроса pushn для сохранения регистров
-    pushn rax, rbx, rcx  ; Сохраняем rax, rbx и rcx в стек
+    ; Используем макрос pushn, чтобы сохранить регистры rax и rbx на стек
+    pushn rax, rbx, rcx
 
-    ; Временно изменяем значения регистров
-    mov rax, 10
-    mov rbx, 20
-    mov rcx, 30
+    ; Изменяем значения регистров
+    mov rax, 5
+    mov rbx, 10
+    mov rcx, 15
 
-    ; Делаем что-то полезное с измененными регистрами
-    add rax, rbx       ; rax = 10 + 20 = 30
-    add rax, rcx       ; rax = 30 + 30 = 60
+    ; Проводим некоторую операцию
+    add rax, rbx       ; rax = 5 + 10 = 15
+    add rax, rcx       ; rax = 15 + 15 = 30
 
-    ; Теперь восстанавливаем предыдущие значения регистров
-    popn rax, rbx, rcx  ; Восстанавливаем rax, rbx и rcx из стека
+    ; Восстанавливаем регистры из стека
+    popn rcx, rbx, rax
 
-    ; Завершаем программу
+    ; Завершение программы
     mov rax, 60        ; системный вызов для выхода
     xor rdi, rdi       ; код возврата 0
     syscall
